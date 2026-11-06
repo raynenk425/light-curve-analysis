@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 STAR_DATA = np.load('/Users/raynenkoonan/Desktop/Universtity/YEAR 4/STAR ANALYSIS MASTERS PROJECT/lc_3216432563376802688.npy')
-#STAR_DATA = STAR_DATA[STAR_DATA['flags'] == 0]
+STAR_DATA = STAR_DATA[STAR_DATA['flags'] == 0]
 print(STAR_DATA.dtype.names)
 x= STAR_DATA['date']
 y= STAR_DATA['calibrated_magnitude']
