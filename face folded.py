@@ -17,7 +17,7 @@ t_v = clean_data['date'][mask_v]
 y_v = clean_data['calibrated_magnitude'][mask_v]
 dy_v = clean_data['calibrated_error'][mask_v]
 
-# Note: We added dy_v here so it uses the Generalized Lomb-Scargle!
+# Use Generalized Lomb-Scargle (weighted by errors) to find the true period
 ls = LombScargle(t_v, y_v, dy_v)
 frequency, power = ls.autopower(minimum_frequency=0.1, maximum_frequency=5.0)
 master_period = 1.0 / frequency[np.argmax(power)]
@@ -43,27 +43,44 @@ for f_band in ['V', 'R', 'I']:
     dy = clean_data['calibrated_error'][mask]
 
 
-    # --- NEW: SINE WAVE FITTING ---
-    # We define the math for a sine wave. We fix the period to our master_period,
-    # so the computer only has to figure out the mean, amplitude, and phase shift.
+    # --- UPGRADED: SINE WAVE FITTING ---
     def sine_model(time_array, mean, amplitude, phase_shift):
         return mean + amplitude * np.sin((2.0 * np.pi * time_array / master_period) + phase_shift)
 
 
-    # Give the computer some logical starting guesses so the fit doesn't fail
     guess_mean = np.median(y)
     guess_amp = (np.max(y) - np.min(y)) / 2.0
-    initial_guesses = [guess_mean, guess_amp, 0.0]
 
-    # Run the least-squares fit (weighting by the measurement errors 'dy')
-    try:
-        best_params, covariance = curve_fit(sine_model, t, y, sigma=dy, p0=initial_guesses)
-    except RuntimeError:
-        print(f"Warning: Sine fit failed for {f_band}-band. Using guesses.")
-        best_params = initial_guesses
-    # ------------------------------
+    best_rms = np.inf
+    best_params = None
 
-    # Calculate the phase for the scatter points
+    # Test 10 different starting phases to prevent getting stuck in a local minimum
+    for phase_guess in np.linspace(0, 2 * np.pi, 10):
+        initial_guesses = [guess_mean, guess_amp, phase_guess]
+        try:
+            # Bounds force the amplitude to remain positive and keep the mean realistic
+            params, _ = curve_fit(
+                sine_model, t, y, sigma=dy, p0=initial_guesses,
+                bounds=([guess_mean - 1.5, 0.0, -np.inf], [guess_mean + 1.5, guess_amp * 3.0, np.inf])
+            )
+
+            # Calculate how well this specific phase shift fits the data (RMS error)
+            residuals = y - sine_model(t, *params)
+            rms = np.sqrt(np.mean(residuals ** 2))
+
+            # Keep the parameters that produce the lowest error
+            if rms < best_rms:
+                best_rms = rms
+                best_params = params
+        except RuntimeError:
+            continue
+
+    if best_params is None:
+        print(f"Warning: Sine fit failed entirely for {f_band}-band. Using raw guesses.")
+        best_params = [guess_mean, guess_amp, 0.0]
+    # -----------------------------------
+
+    # Calculate the phase for the raw scatter points
     phase = (t / master_period) % 1.0
     style = filter_styles[f_band]
 
@@ -71,7 +88,7 @@ for f_band in ['V', 'R', 'I']:
     plt.scatter(phase, y, color=style['color'], alpha=0.4, edgecolors='black', s=20, label=f"{style['label']} Data")
     plt.scatter(phase + 1.0, y, color=style['color'], alpha=0.4, edgecolors='black', s=20)
 
-    # --- NEW: PLOT THE SMOOTH SINE CURVE ---
+    # Plot the smooth sine curve
     # Create a dummy timeline that spans exactly 2 rotations to draw a perfectly smooth line
     t_smooth = np.linspace(0, 2 * master_period, 200)
     y_smooth = sine_model(t_smooth, *best_params)
