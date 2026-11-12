@@ -6,15 +6,25 @@ from astropy.timeseries import LombScargle
 
 # Load and filter out bad photometry
 raw_data = np.load('/Users/raynenkoonan/Desktop/Universtity/YEAR 4/STAR ANALYSIS MASTERS PROJECT/lc_3216432563376802688.npy')
-clean_data = raw_data[raw_data['flags'] == 0]
+clean_data = raw_data[(raw_data['flags'] == 0) & (raw_data['Combined_outliers'] == 0)]
+
+# Set your exact start and end Julian Dates
+start_date = 2460635.0
+end_date = 2460665.0
+# 1. Create the mask (finds all rows where the date is between your start and end)
+date_mask = (clean_data['date'] >= start_date) & (clean_data['date'] <= end_date)
+
+# 2. Apply the mask to your dataset
+dense_slice_data = clean_data[date_mask]
 
 # Isolate a single band for the periodogram (e.g., V-band), BY CHANGING THE mask_v value, to either V, R, I, we can see the lomb scargle for each filter
-mask_v = (clean_data['filter'] == 'V')
+mask_v = (dense_slice_data['filter'] == 'V')
+
 
 # Extract time, magnitude, and uncertainty for the V-band
-t = clean_data['date'][mask_v]
-y = clean_data['calibrated_magnitude'][mask_v]
-dy = clean_data['calibrated_error'][mask_v] # Incorporating the measurement error improves the fit
+t = dense_slice_data['date'][mask_v]
+y = dense_slice_data['calibrated_magnitude'][mask_v]
+dy = dense_slice_data['calibrated_error'][mask_v] # Incorporating the measurement error improves the fit
 
 # Calculate the Lomb-Scargle periodogram
 # autopower() automatically determines the best frequency grid based on your time sampling
