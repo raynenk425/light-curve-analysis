@@ -47,7 +47,7 @@ plt.ylabel('Lomb-Scargle Power')
 plt.title(f'V-Band Periodogram\nPeak Period: {best_period:.4f} days')
 
 # Focus the x-axis on a reasonable stellar rotation range (e.g., 0 to 25 days)
-plt.xlim(0, 25)
+plt.xlim(0, 3)
 plt.grid(True, linestyle='--', alpha=0.5)
 
 plt.show()
