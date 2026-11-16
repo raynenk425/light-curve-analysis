@@ -5,6 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import TextBox, RadioButtons
 from astropy.timeseries import LombScargle
+import numpy as np
+from scipy.signal import find_peaks
+
 
 # 1. Load and filter out bad photometry (DONE ONCE)
 raw_data = np.load(
@@ -101,3 +104,26 @@ radio.on_clicked(update)  # Radio buttons update instantly when clicked
 update(None)
 
 plt.show()
+
+# Assuming you have already run:
+# frequency, power = ls.autopower(minimum_frequency=1/3, maximum_frequency=5.0)
+# period = 1.0 / frequency
+
+# 1. Find the local maximums (where gradient crosses 0)
+# 'height' ignores background noise floor. 'prominence' requires the peak to stand out from surrounding baseline.
+peak_indices, _ = find_peaks(power, height=0.1, prominence=0.05)
+
+# 2. Extract the exact periods and powers for these mathematical peaks
+peak_periods = 1.0 / frequency[peak_indices]
+peak_powers = power[peak_indices]
+
+# 3. Sort them from highest power to lowest power
+sorted_indices = np.argsort(peak_powers)[::-1]
+sorted_periods = peak_periods[sorted_indices]
+sorted_powers = peak_powers[sorted_indices]
+
+# 4. Print the top 5 highest maximums
+print("\n--- Top 5 Local Maximums Detected ---")
+for i in range(min(5, len(sorted_periods))):
+    print(f"Peak {i+1}: Period = {sorted_periods[i]:.4f} days | Power = {sorted_powers[i]:.4f}")
+
