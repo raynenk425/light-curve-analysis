@@ -89,7 +89,11 @@ def update(text):
 
     # Run the Math
     ls = LombScargle(t, y, dy)
-    frequency, power = ls.autopower(minimum_frequency=1 / 3, maximum_frequency=5.0)
+    # Force it to create exactly 100,000 test frequencies
+    frequency = np.linspace(1 / 3, 5.0, 60000)
+
+    # Manually calculate the power for those 100,000 specific points
+    power = ls.power(frequency)
     period = 1.0 / frequency
 
     # Peak Finding
