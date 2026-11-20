@@ -16,7 +16,7 @@ clean_data = raw_data[(raw_data['flags'] == 0) & (raw_data['Combined_outliers'] 
 # dense_slice_data = clean_data[date_mask]
 
 # Isolate a single band for the periodogram using the FULL dataset
-mask_v = (clean_data['filter'] == 'V')
+mask_v = (clean_data['filter'] == 'I')
 
 # Extract time, magnitude, and uncertainty for the full V-band
 t = clean_data['date'][mask_v]
@@ -37,15 +37,15 @@ print(f"==============================================\n")
 # Identify the strongest periodic signal
 best_frequency = frequency[np.argmax(power)]
 best_period = 1.0 / best_frequency
-print(f"Dominant Period (V-band): {best_period:.4f} days")
+print(f"Dominant Period (I-band): {best_period:.4f} days")
 
 # Plot the Power Spectrum (Periodogram)
 plt.figure(figsize=(10, 6))
-plt.plot(1.0 / frequency, power, color='green', linewidth=1.5)
+plt.plot(1.0 / frequency, power, color='black', linewidth=1.0)
 
 plt.xlabel('Period (days)')
 plt.ylabel('Lomb-Scargle Power')
-plt.title(f'V-Band Periodogram (Full Dataset)\nPeak Period: {best_period:.4f} days | Resolution: {len(frequency)} points')
+plt.title(f'I-Band Peiodogram (Full Dataset)\nPeak Period: {best_period:.4f} days | Resolution: {len(frequency)} points')
 
 plt.xlim(0, 25)
 plt.grid(True, linestyle='--', alpha=0.5)
