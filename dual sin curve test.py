@@ -24,7 +24,7 @@ base_amp = np.std(y_real)
 # ==============================================================================
 # Period 1 (The primary ~1.925 peak)
 period_1 = 1.9250
-amplitude_1 = base_amp * 1.0  # Currently at 100% strength
+amplitude_1 = base_amp * 0  # Currently at 100% strength
 
 # Period 2 (The secondary peak you found that is > 2 days)
 # REPLACE 2.0700 WITH YOUR EXACT SECOND PEAK!
